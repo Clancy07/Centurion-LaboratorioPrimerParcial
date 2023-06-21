@@ -1,5 +1,4 @@
-import csv
-
+import csv, re, json
 
 def crear_menu_opciones(lista_opciones):
     for opcion in lista_opciones:
@@ -182,3 +181,174 @@ def realizar_compras():
         precio_final += float(producto['PRECIO_TOTAL'])
 
     print(f'El total de compra es de: ${precio_final}')
+
+def dar_formato_a_lista_insumos(insumos):
+    for insumo in insumos:
+        caracteristicas = insumo['CARACTERISTICAS'].split('~')
+        insumo['CARACTERISTICAS'] = caracteristicas[0]
+        insumo['PRECIO'] = insumo['PRECIO'].strip('$')
+    
+    return insumos
+
+def crear_orden(diccionario):
+    return (diccionario["MARCA"], -float(diccionario["PRECIO"]))
+
+def buscar_palabra_en_lista_dicc(lista_dicc, palabra, key):
+    patron = re.compile(palabra)
+    coicidencias = []
+
+    for elemento in lista_dicc:
+        match = patron.search(elemento[key])
+        if match:
+            coicidencias.append(elemento)
+
+    return coicidencias
+
+def crear_json(nombre_archivo, lista_dicc):
+    archivo = open(nombre_archivo, 'w')
+    archivo.write(json.dumps(lista_dicc, indent=4))
+    archivo.close
+
+def cargar_json_a_lista_dicc(nombre_json):
+    file = open(nombre_json, 'r')
+    contenido = file.read()
+    lista_dicc = json.loads(contenido)
+    file.close()
+
+    return lista_dicc
+
+def strip_lista_dicc(lista_dicc, key, str):
+    for elemento in lista_dicc:
+        elemento[key] = elemento[key].strip(str)
+
+    return lista_dicc
+
+def actualizar_precios(insumos):
+    archivo_csv = 'insumos.csv'
+
+    insumos_original = list(insumos)
+
+    insumos_actualizados = list(map(lambda p: {**p, 'PRECIO': float(p['PRECIO']) * 1.084}, insumos))
+
+    insumos_actualizados = insumos_original + insumos_actualizados
+
+    with open(archivo_csv, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=insumos_actualizados[0].keys())
+        writer.writeheader()
+        writer.writerows(insumos_actualizados)
+
+def escribir_csv(archivo, datos):
+    with open(archivo, 'a', newline='') as archivo_csv:
+        escritor = csv.writer(archivo_csv, delimiter=',')
+        escritor.writerow([])
+        escritor.writerow(datos)
+
+def agregar_insumo():
+    arcivo_insumos = 'insumos.csv'
+    contador_lineas = 0
+
+    with open(arcivo_insumos, 'r') as archivo:
+        for linea in archivo:
+            contador_lineas += 1
+
+    archivo = 'marcas.txt'
+
+    with open(archivo, 'r') as file:
+        marcas = [line for line in file]
+
+    print('Marcas disponibles: ')
+    for marca in marcas:
+        print(marca)
+
+    marcas_lower = []
+    nuevo_insumo = []
+    nuevo_insumo.append(contador_lineas)
+
+    for marca in marcas:
+        marca = marca.strip('\n')
+        marcas_lower.append(marca.lower())
+
+    patron_precio = re.compile(r'\d+(\.\d+)?')
+
+
+    flag_nombre = True
+    flag_marca = True
+    flag_precio = True
+
+    caracteristicas = []
+
+    while flag_nombre: 
+        aux_nombre = input('Ingrese el nombre del producto: ')
+
+        if aux_nombre.isalpha():
+            flag_nombre = False
+            nombre_ingresado = aux_nombre
+        else:
+            print('Nombre invalido. Vuelva a ingresarlo.')
+    nuevo_insumo.append(nombre_ingresado)
+
+    while flag_marca:
+        aux_marca = input('Ingrese la marca: ').lower()
+
+        for marca in marcas_lower:
+            if aux_marca == marca:
+                flag_marca = False
+                marca_ingresada = aux_marca
+                break
+
+        if flag_marca:
+            print('Marca inválida. Vuelva a ingresarla.')
+    nuevo_insumo.append(marca_ingresada)
+
+    while flag_precio:
+        aux_precio = input('Ingrese el precio: ')
+        match = patron_precio.search(aux_precio)
+        if match:
+            flag_precio = False
+            precio_ingresado = aux_precio
+        else:
+            print('Precio invalido. Reingrese un precio valido.')
+    nuevo_insumo.append(precio_ingresado)
+
+    while len(caracteristicas) <= 2:
+        caracteristica = input('Ingrese una caracteristica: ')
+        if caracteristica == '':
+            print('debe ingresar al menos una caracteristica')
+        else:
+            caracteristicas.append(caracteristica)
+            if len(caracteristicas) <= 2:
+                continuar = input('Desea ingresar una caracteristica mas? (si/no): ')
+                if continuar.lower() == 'si':
+                    pass
+                else:
+                    break
+    caracteristicas_separadas = '~'.join(caracteristicas)
+    nuevo_insumo.append(caracteristicas_separadas)
+    
+    return nuevo_insumo
+
+def elegir_json_o_csv():
+    opcion = 'error'
+
+    while opcion == 'error':
+        opcion = input('A que formato desea importar? (json/csv): ').lower()
+        if opcion == 'json':
+            pass
+        elif opcion == 'csv':
+            pass
+        else:
+            opcion = 'error'
+            print('Opcion invalida')
+
+    return opcion
+
+def exportar_csv():
+    with open('insumos.csv', 'r') as file:
+        lector_csv = csv.reader(file)
+        lineas = list(lector_csv)
+
+    with open('datos_actualizados.csv', 'w', newline='') as archivo_nuevo:
+        escritor_csv = csv.writer(archivo_nuevo)
+        for fila in lineas:
+            escritor_csv.writerow(fila)
+
