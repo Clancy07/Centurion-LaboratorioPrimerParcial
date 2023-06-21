@@ -1,6 +1,7 @@
 import os
 from funciones import *
 from funciones_compras import *
+from funciones_recuperatorio import *
 
 flag_case_1 = False
 flag_case_7 = False
@@ -22,10 +23,19 @@ while running:
                                '9- Actualizar precios',
                                '10- Salir del programa',
                                '11- Agregar insumo',
-                               '12 - exportar archivo'])):
+                               '12 - exportar archivo',
+                               '13 - stock por marca',
+                               '14 - productos con bajo stock'])):
 
         case '1':
             flag_case_1 = True
+
+            insumos = convertir_csv_a_lista_diccionarios('insumos.csv')
+
+            lista_con_key_stock = list(map(lambda diccionario: agregar_clave_aleatoria(diccionario, 'STOCK', (0, 10)), insumos))
+
+            escribir_diccionarios_en_csv(insumos, 'insumos.csv')
+
             insumos = convertir_csv_a_lista_diccionarios('insumos.csv')
             print('\n', 'Carga realizada con exito')
             os.system('pause')
@@ -166,4 +176,25 @@ while running:
                 print()
                 print(
                     'Antes de exportar los datos, debe cargarlos (opcion 1)')
+                os.system('pause')
+
+        case '13':
+            if flag_case_1:
+                    pedirle_al_usuario_una_marca_y_mostrar_el_stock_total_de_los_productos_de_esa_marca(insumos)
+                    os.system('pause')
+            else:
+                print()
+                print(
+                    'Antes de ver el stock por marca, debe cargar los datos (opcion 1)')
+                os.system('pause')
+
+        case '14':
+            if flag_case_1:
+                    encontrar_productos_bajo_stock(insumos)
+                    print('Se genero un archivo con una lista de los productos con bajo stock')
+                    os.system('pause')
+            else:
+                print()
+                print(
+                    'Antes de ver que productos tienen bajo stock, debe cargar los datos (opcion 1)')
                 os.system('pause')
